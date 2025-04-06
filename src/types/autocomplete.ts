@@ -1,10 +1,3 @@
-export interface Location {
-    name: string;
-    country: string;
-    lat: number;
-    lon: number;
-  }
-
 export interface Player {
   id: number;
   first_name: string;
@@ -22,24 +15,6 @@ export interface Player {
     full_name: string;
     name: string;
   };
-}
-
-export interface Stock {
-  symbol: string;
-  name: string;
-  exchange: string;
-  type: string;
-  currency: string;
-  region: string;
-  marketOpen: string;
-  marketClose: string;
-  timezone: string;
-  price: number;
-  change: number;
-  changePercent: number;
-  previousClose: number;
-  volume: number;
-  marketCap: number;
 }
 
 export interface AutocompleteProps<T extends string | Player> {
