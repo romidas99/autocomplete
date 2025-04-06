@@ -24,24 +24,19 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   color: var(--text-primary);
   background: var(--background-color);
   min-height: 100vh;
+  margin: 0;
+  padding: 20px;
 }
 
 /* App Container */
 .app-container {
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 2rem;
-}
-
-@media (max-width: 768px) {
-  .app-container {
-    padding: 1rem;
-  }
 }
 
 /* Header */
@@ -63,12 +58,11 @@ body {
 
 /* Card */
 .card {
-  background: var(--cream-lighter);
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  border: 1px solid var(--border-color);
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .card h2 {
@@ -79,7 +73,6 @@ body {
 /* Autocomplete Component */
 .autocomplete-container {
   position: relative;
-  width: 100%;
 }
 
 .autocomplete-label {
@@ -101,14 +94,9 @@ body {
 
 .autocomplete-input {
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: 8px;
   border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: var(--text-primary);
-  background-color: white;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  border-radius: 4px;
 }
 
 .autocomplete-input:focus {
@@ -130,58 +118,46 @@ body {
 }
 
 .loading-spinner {
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 2px solid var(--border-color);
-  border-top-color: var(--primary-color);
+  width: 20px;
+  height: 20px;
+  border: 2px solid #eee;
+  border-top-color: #1d4ed8;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 .autocomplete-dropdown {
   position: absolute;
-  z-index: 10;
   width: 100%;
-  margin-top: 0.25rem;
-  background-color: white;
+  background: white;
   border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  max-height: 15rem;
+  border-radius: 4px;
+  margin-top: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
   overflow-y: auto;
+  z-index: 1000;
 }
 
 .autocomplete-option {
+  padding: 8px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
-  cursor: pointer;
-  transition: background-color 0.15s ease-in-out;
 }
 
-.autocomplete-option:hover {
-  background-color: var(--cream-darker);
-}
-
+.autocomplete-option:hover,
 .autocomplete-option.active {
-  background-color: var(--cream-darker);
-}
-
-.autocomplete-option.selected {
-  background-color: var(--cream-darker);
-  font-weight: 500;
+  background: #f3f4f6;
 }
 
 .autocomplete-option.selected::before {
   content: '✓';
-  margin-right: 0.5rem;
-  color: var(--primary-color);
+  margin-right: 8px;
 }
 
 .autocomplete-description {
@@ -205,16 +181,15 @@ body {
 }
 
 .player-avatar {
-  width: 2.5rem;
-  height: 2.5rem;
-  background-color: var(--primary-color);
+  width: 32px;
+  height: 32px;
+  background: #1d4ed8;
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 1rem;
-  font-weight: 600;
+  margin-right: 8px;
 }
 
 .player-info {
@@ -228,22 +203,21 @@ body {
 
 .player-details {
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: #666;
 }
 
 /* Selected Player Card */
 .selected-player-card {
-  background: var(--cream-lighter);
-  border-radius: 0.5rem;
-  padding: 1rem;
   border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px;
 }
 
 .selected-player-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 8px;
 }
 
 .selected-player-name {
@@ -253,20 +227,15 @@ body {
 }
 
 .remove-player-button {
-  background: none;
   border: none;
-  color: var(--text-secondary);
-  font-size: 1.5rem;
+  background: none;
   cursor: pointer;
-  padding: 0.25rem;
-  line-height: 1;
-  border-radius: 0.25rem;
-  transition: all 0.2s;
+  font-size: 1.25rem;
+  padding: 0 4px;
 }
 
 .remove-player-button:hover {
-  background-color: #fee2e2;
-  color: #dc2626;
+  color: red;
 }
 
 .selected-player-details {
@@ -281,9 +250,8 @@ body {
 /* Selected Players Grid */
 .selected-players-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1rem;
-  margin-top: 1rem;
 }
 
 /* Empty State */
@@ -313,12 +281,11 @@ body {
 
 /* Error Message */
 .error-message {
-  background-color: #fee2e2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-top: 1rem;
+  color: red;
+  padding: 8px;
+  border: 1px solid red;
+  border-radius: 4px;
+  margin-top: 8px;
 }
 
 /* Responsive adjustments */
