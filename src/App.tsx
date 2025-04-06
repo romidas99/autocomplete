@@ -1,131 +1,129 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Autocomplete } from './components/Autocomplete';
 import { usePlayerSearch } from './hooks/usePlayerSearch';
 import { Player } from './types/autocomplete';
 
 function App() {
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-  const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const { players, loading, error, search } = usePlayerSearch();
+  const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
 
-  const handleInputChange = (value: string) => {
-    search(value);
+  // Handle player selection/deselection
+  const handlePlayerSelection = (value: Player | Player[] | null) => {
+    if (!value) {
+      setSelectedPlayers([]);
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      setSelectedPlayers(value);
+    } else {
+      // For single selection, toggle if already selected
+      const isSelected = selectedPlayers.some(player => player.id === value.id);
+      if (isSelected) {
+        setSelectedPlayers(selectedPlayers.filter(player => player.id !== value.id));
+      } else {
+        setSelectedPlayers([...selectedPlayers, value]);
+      }
+    }
+  };
+
+  // Remove a player from selection
+  const removePlayer = (playerId: number) => {
+    setSelectedPlayers(selectedPlayers.filter((player) => player.id !== playerId));
+  };
+
+  // Default filter function for object type
+  const filterOptions = (options: Player[], inputValue: string) => {
+    const searchValue = inputValue.toLowerCase();
+    return options.filter(
+      player => 
+        player.first_name.toLowerCase().includes(searchValue) ||
+        player.last_name.toLowerCase().includes(searchValue) ||
+        (player.team?.full_name?.toLowerCase().includes(searchValue))
+    );
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto space-y-12">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">NBA Player Search</h1>
-          <p className="text-lg text-gray-600">Search and select your favorite NBA players</p>
-        </div>
-        
-        <div className="space-y-12">
-          {/* Single Select Example */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Single Player Select</h2>
-            <Autocomplete<Player>
-              label="Search for a player"
-              description="Type to search for NBA players"
-              options={players}
-              value={selectedPlayer}
-              onChange={(value) => setSelectedPlayer(value as Player | null)}
-              onInputChange={handleInputChange}
-              loading={loading}
-              placeholder="Search for a player..."
-              renderOption={(player) => (
-                <div className="flex items-center space-x-3 p-1">
-                  <div className="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-indigo-600 font-semibold">
-                      {player.first_name[0]}{player.last_name[0]}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">{player.first_name} {player.last_name}</div>
-                    <div className="text-sm text-gray-500">{player.team.full_name} • {player.position || 'N/A'}</div>
-                  </div>
-                </div>
-              )}
-            />
-            {selectedPlayer && (
-              <div className="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
-                <h3 className="font-medium text-indigo-900 mb-2">Selected Player:</h3>
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-indigo-600 font-semibold text-lg">
-                      {selectedPlayer.first_name[0]}{selectedPlayer.last_name[0]}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">{selectedPlayer.first_name} {selectedPlayer.last_name}</div>
-                    <div className="text-sm text-gray-500">
-                      {selectedPlayer.team.full_name} • {selectedPlayer.position || 'N/A'}
-                      {selectedPlayer.height_feet && selectedPlayer.height_inches && 
-                        ` • ${selectedPlayer.height_feet}'${selectedPlayer.height_inches}"`}
-                      {selectedPlayer.weight_pounds && ` • ${selectedPlayer.weight_pounds} lbs`}
-                    </div>
-                  </div>
+    <div className="app-container">
+      <header className="header">
+        <h1>NBA Player Search</h1>
+        <p>Search for NBA players using the Ball Don't Lie API</p>
+      </header>
+
+      <div className="card">
+        <h2>Search for NBA Players</h2>
+        <Autocomplete<Player>
+          label="Search for NBA players"
+          description="Enter player names to add them to your selection"
+          placeholder="Search players..."
+          loading={loading}
+          value={selectedPlayers}
+          options={players}
+          onChange={handlePlayerSelection}
+          onInputChange={search}
+          filterOptions={filterOptions}
+          renderOption={(player) => (
+            <div className="player-option">
+              <div className="player-avatar">
+                <span>{player.first_name[0]}{player.last_name[0]}</span>
+              </div>
+              <div className="player-info">
+                <div className="player-name">{player.first_name} {player.last_name}</div>
+                <div className="player-details">
+                  {player.team?.full_name || "Team not available"} • {player.position || "N/A"}
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* Multiple Select Example */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Multiple Player Select</h2>
-            <Autocomplete<Player>
-              label="Search for multiple players"
-              description="Type to search for NBA players (multiple selection)"
-              options={players}
-              value={selectedPlayers}
-              onChange={(value) => setSelectedPlayers(value as Player[])}
-              onInputChange={handleInputChange}
-              loading={loading}
-              multiple
-              placeholder="Search for players..."
-              renderOption={(player) => (
-                <div className="flex items-center space-x-3 p-1">
-                  <div className="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-indigo-600 font-semibold">
-                      {player.first_name[0]}{player.last_name[0]}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">{player.first_name} {player.last_name}</div>
-                    <div className="text-sm text-gray-500">{player.team.full_name} • {player.position || 'N/A'}</div>
-                  </div>
-                </div>
-              )}
-            />
-            {selectedPlayers.length > 0 && (
-              <div className="mt-4">
-                <h3 className="font-medium text-gray-900 mb-3">Selected Players:</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {selectedPlayers.map((player) => (
-                    <div key={player.id} className="flex items-center space-x-3 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
-                      <div className="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                        <span className="text-indigo-600 font-semibold">
-                          {player.first_name[0]}{player.last_name[0]}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{player.first_name} {player.last_name}</div>
-                        <div className="text-sm text-gray-500">{player.team.full_name}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-              Error: {error}
             </div>
           )}
-        </div>
+          multiple={true}
+        />
       </div>
+
+      {selectedPlayers.length > 0 ? (
+        <div className="card">
+          <h2>Selected Players</h2>
+          <div className="selected-players-grid">
+            {selectedPlayers.map((player) => (
+              <div key={player.id} className="selected-player-card">
+                <div className="selected-player-info">
+                  <div className="selected-player-header">
+                    <h3 className="selected-player-name">
+                      {player.first_name} {player.last_name}
+                    </h3>
+                    <button
+                      onClick={() => removePlayer(player.id)}
+                      className="remove-player-button"
+                      aria-label={`Remove ${player.first_name} ${player.last_name}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="selected-player-details">
+                    <div>Team: {player.team?.full_name || "Team not available"}</div>
+                    <div>Position: {player.position || "N/A"}</div>
+                    {player.height_feet && player.height_inches && (
+                      <div>Height: {player.height_feet}'{player.height_inches}"</div>
+                    )}
+                    {player.weight_pounds && (
+                      <div>Weight: {player.weight_pounds} lbs</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="card empty-state">
+          <div className="empty-state-content">
+            <div className="empty-state-icon">🔍</div>
+            <h3>Search for players</h3>
+            <p>Enter player names to add them to your selection</p>
+          </div>
+        </div>
+      )}
+
+      {error && <div className="error-message">{error}</div>}
     </div>
   );
 }

@@ -20,19 +20,29 @@ export function Autocomplete<T extends string | Player>({
   const [inputValue, setInputValue] = useState('');
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const listRef = useRef<Array<HTMLElement | null>>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
   });
 
-  const click = useClick(context);
-  const dismiss = useDismiss(context);
+  const click = useClick(context, {
+    // Enable click to open
+    enabled: !disabled,
+  });
+
+  const dismiss = useDismiss(context, {
+    // Enable click outside to close
+    outsidePress: true,
+  });
+
   const role = useRole(context);
   const listNavigation = useListNavigation(context, {
     listRef,
     activeIndex,
     onNavigate: setActiveIndex,
+    loop: true,
   });
 
   const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions([
@@ -41,6 +51,14 @@ export function Autocomplete<T extends string | Player>({
     role,
     listNavigation,
   ]);
+
+  // Handle click on the input container
+  const handleContainerClick = () => {
+    if (!disabled) {
+      setIsOpen(true);
+      inputRef.current?.focus();
+    }
+  };
 
   const defaultFilterOptions = useCallback(
     (options: T[], inputValue: string) => {
@@ -69,13 +87,43 @@ export function Autocomplete<T extends string | Player>({
     setIsOpen(true);
   };
 
+  const isOptionSelected = (option: T) => {
+    if (!value) return false;
+    if (Array.isArray(value)) {
+      if (typeof option === 'string') {
+        return value.includes(option);
+      }
+      const player = option as Player;
+      return value.some((v) => (v as Player).id === player.id);
+    }
+    return false;
+  };
+
   const handleSelect = (option: T) => {
     if (multiple) {
       const currentValue = (value as T[]) || [];
-      const newValue = currentValue.includes(option)
-        ? currentValue.filter((v) => v !== option)
-        : [...currentValue, option];
-      onChange(newValue);
+      // Check if the player is already selected
+      if (typeof option === 'string') {
+        // Handle string options
+        const isSelected = currentValue.includes(option);
+        const newValue = isSelected
+          ? currentValue.filter((v) => v !== option)
+          : [...currentValue, option];
+        onChange(newValue);
+      } else {
+        // Handle player options
+        const player = option as Player;
+        const isSelected = currentValue.some((v) => (v as Player).id === player.id);
+        if (isSelected) {
+          // Deselect the player
+          onChange(currentValue.filter((v) => (v as Player).id !== player.id));
+        } else if (!isSelected) {
+          // Only add if not already selected
+          onChange([...currentValue, option]);
+        }
+      }
+      // Keep focus on input after selection in multiple mode
+      inputRef.current?.focus();
     } else {
       onChange(option);
       setIsOpen(false);
@@ -84,8 +132,26 @@ export function Autocomplete<T extends string | Player>({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && activeIndex !== null) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const nextIndex = activeIndex === null ? 0 : 
+        (activeIndex + 1) % filteredOptions.length;
+      setActiveIndex(nextIndex);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prevIndex = activeIndex === null ? filteredOptions.length - 1 : 
+        (activeIndex - 1 + filteredOptions.length) % filteredOptions.length;
+      setActiveIndex(prevIndex);
+    } else if (e.key === 'Enter' && activeIndex !== null) {
+      e.preventDefault();
       handleSelect(filteredOptions[activeIndex]);
+      // Keep dropdown open for multiple selection mode
+      if (multiple) {
+        setIsOpen(true);
+      }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+      inputRef.current?.blur();
     }
   };
 
@@ -97,30 +163,37 @@ export function Autocomplete<T extends string | Player>({
     return `${player.first_name} ${player.last_name} - ${player.team.full_name}`;
   };
 
+  const inputProps = {
+    ...getReferenceProps({
+      onChange: handleInputChange,
+      onKeyDown: handleKeyDown,
+      value: inputValue,
+      placeholder,
+      disabled,
+      type: "text",
+      ref: inputRef,
+    })
+  };
+
   return (
-    <div className="relative w-full">
+    <div className="autocomplete-container">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="autocomplete-label">
           {label}
         </label>
       )}
       <div
         ref={refs.setReference}
-        className={`relative ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`autocomplete-input-container ${disabled ? 'disabled' : ''}`}
+        onClick={handleContainerClick}
       >
         <input
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          disabled={disabled}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          {...getReferenceProps()}
+          className="autocomplete-input"
+          {...inputProps}
         />
         {loading && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+          <div className="autocomplete-loading">
+            <div className="loading-spinner"></div>
           </div>
         )}
       </div>
@@ -129,30 +202,31 @@ export function Autocomplete<T extends string | Player>({
           ref={refs.setFloating}
           style={floatingStyles}
           {...getFloatingProps()}
-          className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+          className="autocomplete-dropdown"
         >
-          {filteredOptions.map((option, index) => (
-            <div
-              key={typeof option === 'string' ? option : (option as Player).id}
-              ref={(el) => {
-                listRef.current[index] = el;
-              }}
-              {...getItemProps({
-                onClick: () => handleSelect(option),
-                role: 'option',
-                'aria-selected': activeIndex === index,
-              })}
-              className={`px-4 py-2 cursor-pointer ${
-                activeIndex === index ? 'bg-blue-100' : 'hover:bg-gray-100'
-              }`}
-            >
-              {renderOption ? renderOption(option) : defaultRenderOption(option)}
-            </div>
-          ))}
+          {filteredOptions.map((option, index) => {
+            const isSelected = isOptionSelected(option);
+            return (
+              <div
+                key={typeof option === 'string' ? option : (option as Player).id}
+                ref={(el) => {
+                  listRef.current[index] = el;
+                }}
+                {...getItemProps({
+                  onClick: () => handleSelect(option),
+                  role: 'option',
+                  'aria-selected': activeIndex === index,
+                })}
+                className={`autocomplete-option ${activeIndex === index ? 'active' : ''} ${isSelected ? 'selected' : ''}`}
+              >
+                {renderOption ? renderOption(option) : defaultRenderOption(option)}
+              </div>
+            );
+          })}
         </div>
       )}
       {description && (
-        <p className="mt-1 text-sm text-gray-500">{description}</p>
+        <p className="autocomplete-description">{description}</p>
       )}
     </div>
   );

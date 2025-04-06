@@ -24,17 +24,35 @@ export interface Player {
   };
 }
 
+export interface Stock {
+  symbol: string;
+  name: string;
+  exchange: string;
+  type: string;
+  currency: string;
+  region: string;
+  marketOpen: string;
+  marketClose: string;
+  timezone: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  previousClose: number;
+  volume: number;
+  marketCap: number;
+}
+
 export interface AutocompleteProps<T extends string | Player> {
-  description?: string;
-  disabled?: boolean;
-  filterOptions?: (options: T[], inputValue: string) => T[];
   label?: string;
+  description?: string;
+  placeholder?: string;
+  disabled?: boolean;
   loading?: boolean;
   multiple?: boolean;
+  value: T | T[] | null;
+  options: T[];
   onChange: (value: T | T[] | null) => void;
   onInputChange?: (value: string) => void;
-  options: T[];
-  placeholder?: string;
+  filterOptions?: (options: T[], inputValue: string) => T[];
   renderOption?: (option: T) => React.ReactNode;
-  value: T | T[] | null;
 }

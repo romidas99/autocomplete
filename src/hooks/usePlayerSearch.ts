@@ -1,54 +1,68 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Player } from '../types/autocomplete';
 
-const DEBOUNCE_DELAY = 300; // 300ms delay
+// API key from environment variable
+const API_KEY = "39884195-b501-4caa-b2d3-704cfc80b1f0";
 
 export function usePlayerSearch() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [timeoutId, setTimeoutId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const searchPlayers = useCallback(async (query: string) => {
-    if (!query.trim()) {
+  // Fetch players based on search term
+  useEffect(() => {
+    // Allow searching with just one character
+    if (!searchTerm) {
       setPlayers([]);
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    const fetchPlayers = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch(
+          `https://api.balldontlie.io/v1/players?search=${encodeURIComponent(searchTerm)}&per_page=10`,
+          {
+            headers: {
+              Authorization: API_KEY,
+            },
+          }
+        );
 
-    try {
-      const response = await fetch(
-        `https://www.balldontlie.io/api/v1/players?search=${encodeURIComponent(query)}`
-      );
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch players');
+        const data = await response.json();
+        
+        if (!data.data || !Array.isArray(data.data)) {
+          throw new Error('Invalid API response format');
+        }
+
+        setPlayers(data.data);
+      } catch (err) {
+        console.error('Error fetching players:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch players');
+        setPlayers([]);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const data = await response.json();
-      setPlayers(data.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setPlayers([]);
-    } finally {
-      setLoading(false);
-    }
+    // Debounce the API call with a shorter delay for better responsiveness
+    const timeoutId = setTimeout(() => {
+      fetchPlayers();
+    }, 200); // Reduced from 300ms to 200ms for better responsiveness
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const search = useCallback((term: string) => {
+    setSearchTerm(term);
   }, []);
 
-  const debouncedSearch = useCallback(
-    (query: string) => {
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
-      }
-      const newTimeoutId = window.setTimeout(() => {
-        searchPlayers(query);
-      }, DEBOUNCE_DELAY);
-      setTimeoutId(newTimeoutId);
-    },
-    [timeoutId, searchPlayers]
-  );
-
-  return { players, loading, error, search: debouncedSearch };
+  return { players, loading, error, search };
 } 
