@@ -55,7 +55,7 @@ function App() {
         <Autocomplete<Player>
           label="Search for NBA players"
           description="Enter player names to add them to your selection"
-          placeholder="Search players..."
+          placeholder="Type a player name..."
           loading={loading}
           value={selectedPlayers}
           options={players}
@@ -113,15 +113,7 @@ function App() {
             ))}
           </div>
         </div>
-      ) : (
-        <div className="card empty-state">
-          <div className="empty-state-content">
-            <div className="empty-state-icon">🔍</div>
-            <h3>Search for players</h3>
-            <p>Enter player names to add them to your selection</p>
-          </div>
-        </div>
-      )}
+      ) : null}
 
       {error && <div className="error-message">{error}</div>}
     </div>

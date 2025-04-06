@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useFloating, useInteractions, useClick, useDismiss, useRole, useListNavigation } from '@floating-ui/react';
 import { AutocompleteProps, Player } from '../types/autocomplete';
 
