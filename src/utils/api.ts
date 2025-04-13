@@ -1,4 +1,4 @@
-const API_KEY = import.meta.env.VITE_OWM_KEY; // Add to .env file
+const API_KEY = import.meta.env.VITE_OWM_KEY; 
 
 export const fetchLocations = async (query: string) => {
   const response = await fetch(

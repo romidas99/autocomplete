@@ -30,6 +30,7 @@ export function Autocomplete<T extends string | Player>({
   const click = useClick(context, {
     // Enable click to open
     enabled: !disabled,
+    keyboardHandlers: false
   });
 
   const dismiss = useDismiss(context, {
